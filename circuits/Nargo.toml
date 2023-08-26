@@ -1,4 +1,5 @@
 [package]
+name = "stealthdrop"
 authors = [""]
 compiler_version = "0.7.1"
 

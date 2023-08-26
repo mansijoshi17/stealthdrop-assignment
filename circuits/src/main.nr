@@ -3,6 +3,41 @@ global CANDIDATES: Field = 2;
 use dep::std;
 use dep::ecrecover;
 
+
+fn split_u8_64(
+    arr: [u8; 64]
+) -> ([u8; 32], [u8; 32]) {
+    let mut arr_a: [u8; 32] = [0; 32];
+    let mut arr_b: [u8; 32] = [0; 32];
+
+    for i in 0..32 {
+        arr_a[i] = arr[i];
+        arr_b[i] = arr[i + 32];
+    };
+
+    (arr_a, arr_b)
+}
+
+fn address_from_public_key(pub_key: [u8; 64]) -> Field {
+    let hashed_pub_key = std::hash::keccak256(pub_key, 64);
+
+    let mut addr: Field = 0;
+    for i in 0..20 {
+        addr = (addr * 256) + hashed_pub_key[i + 12] as Field;
+    }
+
+    addr
+}
+
+fn verify_sig(pub_key: [u8; 64], signature: [u8; 64], hashed_message: [u8; 32]) -> Field {
+    let (key_x, key_y) = split_u8_64(pub_key);
+
+    let verified = std::ecdsa_secp256k1::verify_signature(key_x, key_y, signature, hashed_message);
+
+    assert(verified == true);
+    address_from_public_key(pub_key)
+}
+
 fn main(
   pub_key: [u8; 64],
   signature: [u8; 64],
@@ -11,11 +46,13 @@ fn main(
   polynomial_commitment: pub Field,
   nullifier: pub [u8; 32],
 ) {
-  // Write your main logic here
+
+   let addr = verify_sig(pub_key, signature, hashed_message);
+  
 }
 
 fn evaluate_polynomial(polynomial: [Field; CANDIDATES + 1], x: Field) -> Field {
-  // Write logic to evaluate polynomial here
+  
 }
 
 #[test]
