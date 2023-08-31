@@ -2,6 +2,7 @@
 name = "stealthdrop"
 authors = [""]
 compiler_version = "0.7.1"
+type = "bin"
 
 [dependencies]
 ecrecover = { tag = "v0.8.0", git = "https://github.com/colinnielsen/ecrecover-noir" }

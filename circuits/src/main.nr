@@ -3,41 +3,6 @@ global CANDIDATES: Field = 2;
 use dep::std;
 use dep::ecrecover;
 
-
-fn split_u8_64(
-    arr: [u8; 64]
-) -> ([u8; 32], [u8; 32]) {
-    let mut arr_a: [u8; 32] = [0; 32];
-    let mut arr_b: [u8; 32] = [0; 32];
-
-    for i in 0..32 {
-        arr_a[i] = arr[i];
-        arr_b[i] = arr[i + 32];
-    };
-
-    (arr_a, arr_b)
-}
-
-fn address_from_public_key(pub_key: [u8; 64]) -> Field {
-    let hashed_pub_key = std::hash::keccak256(pub_key, 64);
-
-    let mut addr: Field = 0;
-    for i in 0..20 {
-        addr = (addr * 256) + hashed_pub_key[i + 12] as Field;
-    }
-
-    addr
-}
-
-fn verify_sig(pub_key: [u8; 64], signature: [u8; 64], hashed_message: [u8; 32]) -> Field {
-    let (key_x, key_y) = split_u8_64(pub_key);
-
-    let verified = std::ecdsa_secp256k1::verify_signature(key_x, key_y, signature, hashed_message);
-
-    assert(verified == true);
-    address_from_public_key(pub_key)
-}
-
 fn main(
   pub_key: [u8; 64],
   signature: [u8; 64],
@@ -47,12 +12,29 @@ fn main(
   nullifier: pub [u8; 32],
 ) {
 
-   let addr = verify_sig(pub_key, signature, hashed_message);
+   let mut pub_key_x: [u8; 32] = [0; 32];
+  let mut pub_key_y: [u8; 32] = [0; 32];
+
+    for i in 0..32 {
+      pub_key_x[i] = pub_key[i];
+      pub_key_y[i] = pub_key[i+32];
+    }
   
+  let addr: Field = ecrecover::ecrecover(pub_key_x, pub_key_y, signature, hashed_message);
+
+    assert(evaluate_polynomial(polynomial, addr) == 0);
+
+
+    let check_polynomial = std::hash::pedersen(polynomial)[0];
+    assert(polynomial_commitment == check_polynomial);
+
+    let sig_hash = std::hash::blake2s(signature);
+    assert(nullifier == sig_hash);
 }
 
 fn evaluate_polynomial(polynomial: [Field; CANDIDATES + 1], x: Field) -> Field {
-  
+  let hash_val = polynomial[0] + polynomial[1] * x + polynomial[2] * x * x; // 0,1,2 (3 candidates)
+  hash_val
 }
 
 #[test]
