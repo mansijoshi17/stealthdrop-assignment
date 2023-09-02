@@ -12,8 +12,8 @@ fn main(
   nullifier: pub [u8; 32],
 ) {
 
-   let mut pub_key_x: [u8; 32] = [0; 32];
-  let mut pub_key_y: [u8; 32] = [0; 32];
+   let mut pub_key_x = [0; 32];
+   let mut pub_key_y = [0; 32];
 
     for i in 0..32 {
       pub_key_x[i] = pub_key[i];
